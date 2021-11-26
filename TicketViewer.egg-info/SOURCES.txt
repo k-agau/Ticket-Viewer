@@ -1,0 +1,10 @@
+LICENSE
+README.md
+setup.py
+viewer.py
+TicketViewer.egg-info/PKG-INFO
+TicketViewer.egg-info/SOURCES.txt
+TicketViewer.egg-info/dependency_links.txt
+TicketViewer.egg-info/entry_points.txt
+TicketViewer.egg-info/requires.txt
+TicketViewer.egg-info/top_level.txt

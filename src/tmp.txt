@@ -1,0 +1,3 @@
+curl https://zccagau.zendesk.com/api/v2/tickets/show_many.json?ids=1,2,3 \ -v -u ksilvergold18@gmail.com:Tmp123
+
+curl https://zccagau.zendesk.com/api/v2/imports/tickets/create_many.json -v -u ksilvergold18@gmail.com:Tmp123 -X POST -d @tickets.json -H "Content-Type: application/json"
