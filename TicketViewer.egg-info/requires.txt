@@ -1,3 +1,6 @@
 pycurl
 Click
 pyfiglet
+certifi
+termcolor
+six

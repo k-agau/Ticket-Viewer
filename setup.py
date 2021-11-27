@@ -5,12 +5,15 @@ setup(
     version='1.0',
     py_modules=['viewer'],
     install_requires=[
-        'pycurl',
+        'requests',
         'Click',
         'pyfiglet',
+        'certifi',
+        'termcolor',
+        'six'
     ],
     entry_points='''
         [console_scripts]
-        viewer=viewer:main
+        viewer=viewer:login
     ''',
 )

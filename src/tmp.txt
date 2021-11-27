@@ -1,3 +1,7 @@
 curl https://zccagau.zendesk.com/api/v2/tickets/show_many.json?ids=1,2,3 \ -v -u ksilvergold18@gmail.com:Tmp123
 
 curl https://zccagau.zendesk.com/api/v2/imports/tickets/create_many.json -v -u ksilvergold18@gmail.com:Tmp123 -X POST -d @tickets.json -H "Content-Type: application/json"
+
+curl https://zccagau.zendesk.com/api/v2/tickets/show_many.json?ids=1,2,3 -H "Authorization: Bearer 8c6c5ca51116ab662a84f519bfac48cd6172e3b887909d4952a950b54b572394"
+
+oAuth: 8c6c5ca51116ab662a84f519bfac48cd6172e3b887909d4952a950b54b572394
