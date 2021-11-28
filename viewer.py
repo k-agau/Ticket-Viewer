@@ -49,13 +49,14 @@ def cx(givenUrl, logging_in=False):
     except Exception as e:
         template = "An exception of type {0} occurred. Arguments:\n{1!r}"
         message = template.format(type(e).__name__, e.args)
-        log(message, 'red')
         if testing:
             return
-        if logging_in:
-            login()
         else:
-            main()
+            log(message, 'red')
+            if logging_in:
+                login()
+            else:
+                main()
     #if response.status_code != 204:
     return response.json()
 
@@ -169,6 +170,8 @@ def login():
     if isValid() and not testing:
         print('*****WELCOME*****')
         main()
+
+
 
 if __name__ == '__main__':
     main()
