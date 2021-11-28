@@ -6,32 +6,12 @@ import json
 from termcolor import colored
 import six
 
-# TO DO
-#   Tidy up code
-#       Page section especially
-#   Make UI look nicer
-#       FINALZIE FORMAT
-#   Error messages
-#       API unavailable / invalid response
-#           Invalid response: ticket DNE ?
-#           API unavailable: probably some way to check in pycurl/requests
-#   Testing
-#       Helper methods
-#       Main methods
-#       Make sure UI is good for all base cases
-#           Base cases:
-#   OAuth
-#       ???
-#   API: make sure everything is good / most efficient
-#   Job status stuff?
-#   Look into GET requests
-
 # CONSTANTS
-
-s = 'https://zccagau.zendesk.com/api/v2/'
-numberPerPage = 25
-maxLineLength = 100
-token = 'invalid'
+s = 'https://zccagau.zendesk.com/api/v2/'   # Base url for all requests
+numberPerPage = 10                          # Number of requests per page when all tickets requested
+maxLineLength = 100                         # Max line length of a ticket requested in basic mode
+token = 'invalid'                           # The OAuth token inputted by the user
+testing = True                              # Allows one to call individual methods
 
 # Helper methods
 
@@ -39,18 +19,6 @@ token = 'invalid'
 @click.group()
 def cli():
     pass
-
-# Checks the login
-def isValid():
-    print('tmp')
-
-# Takes in a URL, uses cURL, and returns a json
-def cx(givenUrl):
-    headers = {"Authorization" : "Bearer " + token}
-    response = requests.get(s + givenUrl, headers=headers)
-    response.raise_for_status()
-    if response.status_code != 204:
-        return response.json()
 
 # Customized printing
 def log(msg, color, font = 'slant', figlet = False):
@@ -60,69 +28,97 @@ def log(msg, color, font = 'slant', figlet = False):
         six.print_(colored(figlet_format(
             msg, font=font), color))
 
-# Processes the JSON and ensures that the ticket exists
-def processJson(obj, type):
-    if type not in obj:
-        print("ERR: The ticket does not exist. Returning to view single ticket interface...")
-        viewTicket()
-    return obj[type]
+# Checks the login
+# Handles bad API key, API not available
+def isValid():
+    try:
+        cx('tickets/count', logging_in=True) # Should always exist
+    except Exception as e:
+        template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+        message = template.format(type(e).__name__, e.args)
+        log(message, 'red')
+        return False
+    return True
 
-# Formats the tickets for printing
-# Can either do advanced with more detail, or
-# not advanced, in sentence format. Advanced is
-# only available for printing a single ticket
+# Takes in a URL, uses cURL, and returns a json
+def cx(givenUrl, logging_in=False):
+    headers = {"Authorization" : "Bearer " + token}
+    try:
+        response = requests.get(s + givenUrl, headers=headers)
+        response.raise_for_status()
+    except Exception as e:
+        template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+        message = template.format(type(e).__name__, e.args)
+        log(message, 'red')
+        if testing:
+            return
+        if logging_in:
+            login()
+        else:
+            main()
+    #if response.status_code != 204:
+    return response.json()
+
+def fixLength(str):
+    '''
+    Fixes the length of a string to 100 characters
+    Adds a newline at every 100 characters
+    '''
+    lines = []
+    for i in range(0, len(str), maxLineLength):
+        lines.append(str[i:i+maxLineLength])
+    return '\n'.join(lines)
+
 def formatTickets(x, advanced=False):
+    '''
+    Formats the tickets for printing
+    Can either do advanced with more detail, or
+    not advanced, in sentence format. Advanced is
+    only available for printing a single ticket
+    '''
     id = str(x["id"])
     subj = str(x["subject"])
     sent = str(x["submitter_id"])
     opened = str(x["created_at"])
-
     if advanced:
-        print('\n*****TICKET INFORMATION*****')
+        print("\n*****TICKET INFORMATION*****\n")
         desc = x["description"]
-        print('ID: ' + id)
-        print('Subject: ' + subj)
-        print('Sent by: ' + sent)
-        print('Opened on: ' + opened)
-        print('Description:\n' + desc)
+        template = "ID: {0}\nSubject: {1}\nSent by{2}\nOpened on: {3}\nDescription:\n{4}"
+        res = template.format(id, fixLength(subj), sent, opened, fixLength(desc))
     else:
-        res = "Ticket " + id + " with subject '" + subj + "' was sent on on " + sent + " and opened on " + opened + "."
-        if(len(res) > maxLineLength):
-            print(res[0:maxLineLength] + "...")
-            # flesh out. add choice to expand
-            # Break up into chunks? do 100 chars first line, next 100 next line, make sure to indent + count the tabs
-        else:
-            print(res)
+        template = "Ticket {0} with subject {1} was sent on {2} and opened on {3}.\n"
+        res = fixLength(template.format(id, subj, sent, opened))
+    print(res)
 
 # Main methods
 
-# Views a ticket
-# Asks for an input for a ticket ID
-# If 0, return to main
-# Else, prompt for the detail to be shown
-# If 0, call formatTickets for regular format.
-# If 1, call formatTickets for advanced format.
 @cli.command(name='1')
 def viewTicket():
-    choice = str(input("Please enter the ticket ID, or press 0 to return to the menu: ")) #click.prompt('Enter a ticket number: ', type=click.Choice(str))
+    '''
+    Views a ticket
+    Asks for an input for a ticket ID
+    If 0, return to main
+    Else, prompt for the detail to be shown
+    If 0, call formatTickets for regular format.
+    If 1, call formatTickets for advanced format.
+    '''
+    choice = click.prompt('Please enter the ticket ID, or press 0 to return to the menu', type=str)
     if int(choice) > 0:
-        mode = int(input("0 for regular, 1 for advanced"))
-        advanced = True
-        if mode == 0:
-            advanced = False
-        formatTickets(processJson(cx('tickets/' + choice), "ticket"), advanced)
+        formatTickets(cx('tickets/' + choice)["ticket"], True)
     choice = input('*****Press any key to return to the main menu*****')
     print("\n")
-    main()
+    if not testing:
+        main()
 
-# Views all tickets
-# Processes the JSON, and allows for 
-# one to page through tickets
 @cli.command(name='2')
 def viewAllTickets():
+    '''
+    Views all tickets
+    Allows paging through tickets
+    '''
     # Receives all tickets from cURL as a dictionary
-    tickets = processJson(cx('incremental/tickets.json?start_time=0'), "tickets")
-    # Max number of tickets
+    tickets = cx('incremental/tickets.json?start_time=0')["tickets"]
+    # Total' number of tickets
     numTickets = len(tickets)
     # Used to start the loop
     choice = 1
@@ -130,15 +126,19 @@ def viewAllTickets():
     page = 0
     maxPage = int(numTickets / numberPerPage)
     while choice == 1 or choice == 2 or choice == 3:
+        # 0-based indexing for pages
         pageStart = numberPerPage * page
         pageEnd = numberPerPage + pageStart
         if pageEnd > numTickets:
             pageEnd = numTickets
         
+        # Print all tickets in that range
         for x in range(pageStart, pageEnd):
             formatTickets(tickets[x], False)
+        
         print("\nPage " + str(page + 1) + " of " + str(maxPage + 1))
-        choice = int(input("\n1 for prev, 2 for next, 3 to select a page, any other input to exit: "))
+        # Refresh choice
+        choice = click.prompt('\nTo view the previous page, press 1.\nTo view the next page, press 2.\nTo select a page, press 3.\nTo exit, enter any other number\nOption: ', type=int)
         print("\n")
 
         if choice == 1:
@@ -148,10 +148,13 @@ def viewAllTickets():
             if pageEnd != numTickets:
                 page += 1
         elif choice == 3:
-            page = int(input("New page: "))
+            page = click.prompt("New page: ", type=int)
             if page > maxPage:
                 page = maxPage
-    main()
+            elif page < 0:
+                page = 0
+    if not testing:
+        main()
 
 @cli.command()
 def main():
@@ -160,12 +163,12 @@ def main():
     while option != 'exit':
         cli.commands[option]()
 
-@click.command()
 def login():
     global token
     token = input('Enter an OAuth Token: ')
-    isValid()
-    main()
+    if isValid() and not testing:
+        print('*****WELCOME*****')
+        main()
 
 if __name__ == '__main__':
     main()
