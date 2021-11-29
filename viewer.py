@@ -86,12 +86,12 @@ def formatTickets(x, advanced=False):
     subj = str(x['subject'])
     sent = str(x['submitter_id'])
     opened = str(x['created_at'])
-    if advanced:
+    if advanced: # format for requesting a single ticket
         print('\n*****TICKET INFORMATION*****\n')
         desc = x['description']
         template = 'ID: {0}\nSubject: {1}\nSent by: {2}\nOpened on: {3}\nDescription:\n{4}'
         res = template.format(id, fixLength(subj), sent, opened, fixLength(desc))
-    else:
+    else: # format for requesting many tickets
         template = 'Ticket {0} with subject {1} was sent on {2} and opened on {3}.\n'
         res = fixLength(template.format(id, subj, sent, opened))
     print(res)
@@ -102,7 +102,7 @@ def formatTickets(x, advanced=False):
 def viewTicket():
     '''
     Views a ticket
-    Asks for an input for a ticket ID
+    Asks for an input of a ticket ID
     If 0, return to main
     Else, request the ticket data from the API
     '''
@@ -134,7 +134,8 @@ def viewAllTickets():
         pageStart = numberPerPage * page
         pageEnd = numberPerPage + pageStart
         # ensures that the page end does not go past the maximum number of tickets
-        if pageEnd > numTickets:
+        # accounts for 0 indexing of the array
+        if pageEnd >= numTickets:
             pageEnd = numTickets
         
         # Print all tickets in that range
