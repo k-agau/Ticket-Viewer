@@ -8,9 +8,9 @@ setup(
         'requests',
         'Click',
         'pyfiglet',
-        'certifi',
         'termcolor',
-        'six'
+        'six',
+        'virtualenv'
     ],
     entry_points='''
         [console_scripts]

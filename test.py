@@ -12,12 +12,15 @@ runner = CliRunner()
 class TestViewer(unittest.TestCase):
     def test_fixLength(self):
         emptyString = ''
+        randomString = 'asdlkjasfljadofinqeopifnjqaoasodnqeofinwef'
         hundredCharString = 'asdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasda'
         overHundredCharString = 'asdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaa'
         twoHundredCharString = 'asdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasda'
         overTwoHundredCharString = 'asdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaa'
         result = fixLength(emptyString)
         self.assertEqual(result, emptyString, "Not equal")
+        result = fixLength(randomString)
+        self.assertEqual(result, randomString, "Not equal")
         result = fixLength(hundredCharString)
         self.assertEqual(result, hundredCharString, "Not equal")
         result = fixLength(overHundredCharString)
@@ -68,7 +71,7 @@ class TestViewer(unittest.TestCase):
         desc = ''
         dict = {'id': _id, 'subject': subj, 'submitter_id': sent, 'created_at': opened, 'description': desc}
         formatTickets(dict, True)
-        mock_print.assert_called_with('ID: \nSubject: \nSent by\nOpened on: \nDescription:\n')
+        mock_print.assert_called_with('ID: \nSubject: \nSent by: \nOpened on: \nDescription:\n')
 
         # Short subj
         _id = '1'
@@ -78,7 +81,7 @@ class TestViewer(unittest.TestCase):
         desc = 'asd'
         dict = {'id': _id, 'subject': subj, 'submitter_id': sent, 'created_at': opened, 'description': desc}
         formatTickets(dict, True)
-        mock_print.assert_called_with('ID: 1\nSubject: asd\nSent by1\nOpened on: 2\nDescription:\nasd')
+        mock_print.assert_called_with('ID: 1\nSubject: asd\nSent by: 1\nOpened on: 2\nDescription:\nasd')
 
         # Long subj
         _id = '1'
@@ -88,10 +91,9 @@ class TestViewer(unittest.TestCase):
         desc = 'asd'
         dict = {'id': _id, 'subject': subj, 'submitter_id': sent, 'created_at': opened, 'description': desc}
         formatTickets(dict, True)
-        mock_print.assert_called_with('ID: 1\nSubject: asdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasda\nasdasdasda\nSent by1\nOpened on: 2\nDescription:\nasd')
+        mock_print.assert_called_with('ID: 1\nSubject: asdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasda\nasdasdasda\nSent by: 1\nOpened on: 2\nDescription:\nasd')
 
         # Long subj, long desc
-        # Long subj
         _id = '1'
         subj = 'asdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasda'
         sent = '1'
@@ -99,11 +101,11 @@ class TestViewer(unittest.TestCase):
         desc = 'asdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasda'
         dict = {'id': _id, 'subject': subj, 'submitter_id': sent, 'created_at': opened, 'description': desc}
         formatTickets(dict, True)
-        mock_print.assert_called_with('ID: 1\nSubject: asdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasda\nasdasdasda\nSent by1\nOpened on: 2\nDescription:\nasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasda\nasdasdasda')
+        mock_print.assert_called_with('ID: 1\nSubject: asdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasda\nasdasdasda\nSent by: 1\nOpened on: 2\nDescription:\nasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasdaasdasdasda\nasdasdasda')
     def test_cx(self):
         # Assumes with valid token. Assumes validation step works.
-        # Broken URL
         '''
+        # Broken URL
         try:
             cx()
         except Exception as e:
@@ -125,6 +127,7 @@ class TestViewer(unittest.TestCase):
             self.assertEqual(1, 2, "Should have passed")
         '''
         # Assumes invalid token
+        # Valid ticket
         try:
             cx('tickets/1')
         except Exception as e:
@@ -133,7 +136,7 @@ class TestViewer(unittest.TestCase):
         try:
             cx('tickets/1000')
         except Exception as e:
-            self.assertEqual(1, 2, 'Should have failed')
+            self.assertEqual(1, 1, 'Should have failed')
         # Receive all tickets
         try:
             cx('incremental/tickets.json?start_time=0')
@@ -145,32 +148,12 @@ class TestViewer(unittest.TestCase):
         '''
         result = isValid()
         self.assertEqual(result, True, "Should return true")
-
-        # Assuming invalid token
         '''
+        # Assuming invalid token
+        
         result = isValid()
         self.assertEqual(result, False, "Should return false")
         #'''
-
-    #@patch('builtins.input', return_value='8c6c5ca51116ab662a84f519bfac48cd6172e3b887909d4952a950b54b572394')
-    #def test_valid_login(self, input):
-    #    '''
-    #    Tests a valid login
-    #    '''
-    #    result = runner.invoke(
-    #        viewer.login()
-    #    )
-    #    print(result)
-    #@patch('builtins.input', return_value='1')
-    #def test_main(self, input):
-        #result = runner.invoke(
-        #    viewer.main()
-        #)
-        #print(result)
-
-        
-        
-
 
 if __name__ == '__main__':
     unittest.main()

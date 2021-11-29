@@ -1,6 +1,6 @@
-pycurl
+requests
 Click
 pyfiglet
-certifi
 termcolor
 six
+virtualenv
